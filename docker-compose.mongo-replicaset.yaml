@@ -1,0 +1,152 @@
+#ddev-generated
+# Remove the line above if you don't want this file to be overwritten when you run
+# ddev get drupal-daffie/ddev-mongo-replicaset
+#
+# This file comes from https://github.com/drupal-daffie/ddev-mongo-replicaset
+# mongosh mongodb://db:db@localhost
+# mongosh mongodb://127.0.0.1:27017 -u db -p db
+# mongosh --host 127.0.0.1:27017 -u db -p db
+services:
+  # mongodb replicaset primary member
+  mongo:
+    container_name: ddev-${DDEV_SITENAME}-mongo
+    hostname: ddev-${DDEV_SITENAME}-mongo
+    image: mongo:7-jammy
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: db
+      MONGO_INITDB_ROOT_PASSWORD: db
+      MONGO_INITDB_DATABASE: db
+    expose:
+      - 27017
+    ports:
+      - 27017:27017
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+      com.ddev.platform: ddev
+    volumes:
+      - type: "volume"
+        source: mongo
+        target: "/data/db"
+        volume:
+          nocopy: true
+      - ".:/mnt/ddev_config"
+    depends_on:
+      - mongo-secondary
+      - mongo-arbiter
+    restart: always
+    entrypoint:
+      - bash
+      - -c
+      - |
+        chmod 400 /mnt/ddev_config/replica.key
+        chown 999:999 /mnt/ddev_config/replica.key
+        exec docker-entrypoint.sh $$@
+    command: "mongod --bind_ip_all --replSet dbrs --keyFile /mnt/ddev_config/replica.key --port 27017"
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' localhost:27017/test --quiet"]
+      interval: 5s
+      timeout: 60s
+
+  # mongodb replicaset secondary member
+  mongo-secondary:
+    container_name: ddev-${DDEV_SITENAME}-mongo-secondary
+    hostname: ddev-${DDEV_SITENAME}-mongo-secondary
+    image: mongo:7-jammy
+    expose:
+      - 27017
+    volumes:
+      - type: "volume"
+        source: mongo-secondary
+        target: "/data/db"
+        volume:
+          nocopy: true
+      - ".:/mnt/ddev_config"
+    restart: always
+    entrypoint:
+      - bash
+      - -c
+      - |
+        chmod 400 /mnt/ddev_config/replica.key
+        chown 999:999 /mnt/ddev_config/replica.key
+        exec docker-entrypoint.sh $$@
+    command: "mongod --bind_ip_all --replSet dbrs --keyFile /mnt/ddev_config/replica.key"
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' localhost:27017/test --quiet"]
+      interval: 5s
+      timeout: 60s
+
+  # mongodb replicaset arbiter member
+  mongo-arbiter:
+    container_name: ddev-${DDEV_SITENAME}-mongo-arbiter
+    hostname: ddev-${DDEV_SITENAME}-mongo-arbiter
+    image: mongo:7-jammy
+    expose:
+      - 27017
+    volumes:
+      - type: "volume"
+        source: mongo-arbiter
+        target: "/data/db"
+        volume:
+          nocopy: true
+      - ".:/mnt/ddev_config"
+    restart: always
+    entrypoint:
+      - bash
+      - -c
+      - |
+        chmod 400 /mnt/ddev_config/replica.key
+        chown 999:999 /mnt/ddev_config/replica.key
+        exec docker-entrypoint.sh $$@
+    command: "mongod --bind_ip_all --replSet dbrs --keyFile /mnt/ddev_config/replica.key"
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' localhost:27017/test --quiet"]
+      interval: 5s
+      timeout: 60s
+
+  mongo-setup:
+    container_name: ddev-${DDEV_SITENAME}-mongo-setup
+    hostname: ddev-${DDEV_SITENAME}-mongo-setup
+    image: mongo:7-jammy
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: db
+      MONGO_INITDB_ROOT_PASSWORD: db
+      DDEV_SITENAME: ${DDEV_SITENAME}
+    depends_on:
+      - mongo
+      - mongo-secondary
+      - mongo-arbiter
+    volumes:
+      - ".:/mnt/ddev_config"
+    restart: no
+    # Make the script executable by running: chmod +x mongodb_rs_init.sh
+    entrypoint: ["/bin/bash", "/mnt/ddev_config/mongodb_rs_init.sh"]
+
+  mongo-express:
+    container_name: ddev-${DDEV_SITENAME}-mongo-express
+    hostname: ddev-${DDEV_SITENAME}-mongo-express
+    image: mongo-express:latest
+    restart: no
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+      com.ddev.platform: ddev
+    expose:
+      - "8081"
+    environment:
+      VIRTUAL_HOST: $DDEV_HOSTNAME
+      ME_CONFIG_BASICAUTH_USERNAME: db
+      ME_CONFIG_BASICAUTH_PASSWORD: db
+      ME_CONFIG_MONGODB_URL: "mongodb://db:db@mongo,mongo-secondary,mongo-arbiter/?replicaSet=dbrs"
+      HTTP_EXPOSE: "9091:8081"
+    depends_on:
+      - mongo
+      - mongo-secondary
+      - mongo-arbiter
+      - mongo-setup
+    entrypoint: [sh, -c, "sleep 5s && tini -- /docker-entrypoint.sh mongo-express"]
+
+volumes:
+  mongo:
+  mongo-secondary:
+  mongo-arbiter:
