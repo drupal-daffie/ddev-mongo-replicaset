@@ -13,6 +13,10 @@ This DDEV addon is not compatible with the DDEV addon for standalone MongoDB (`d
 
 It's based on [MongoDb from Docker Hub](https://hub.docker.com/_/mongo?tab=description#-via-docker-stack-deploy-or-docker-compose), [DDEV custom compose files](https://ddev.readthedocs.io/en/stable/users/extend/custom-compose-files/) and [API Platform tutorial](https://api-platform.com/docs/core/mongodb/#enabling-mongodb-support).
 
+## How to install
+
+Run the command: `ddev get drupal-daffie/ddev-mongo-replicaset`
+
 ## Connection to the MongoDB replica set
 
  - Inside docker: `mongodb://db:db@mongo,mongo-secondary,mongo-arbiter/?replicaSet=dbrs`
