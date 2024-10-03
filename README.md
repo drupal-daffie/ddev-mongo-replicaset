@@ -11,11 +11,11 @@ MongoDB as a replica set offers a couple of extras that a standalone MongoDB set
 
 This DDEV addon is not compatible with the DDEV addon for standalone MongoDB (`ddev-mongo`). Use the standalone MongoDB OR use the MongoDB as a replica set. NOT BOTH!
 
-It's based on [MongoDb from Docker Hub](https://hub.docker.com/_/mongo?tab=description#-via-docker-stack-deploy-or-docker-compose), [DDEV custom compose files](https://ddev.readthedocs.io/en/stable/users/extend/custom-compose-files/) and [API Platform tutorial](https://api-platform.com/docs/core/mongodb/#enabling-mongodb-support).
+It's based on [MongoDB from Docker Hub](https://hub.docker.com/_/mongo?tab=description#-via-docker-stack-deploy-or-docker-compose), [DDEV custom compose files](https://ddev.readthedocs.io/en/stable/users/extend/custom-compose-files/) and [API Platform tutorial](https://api-platform.com/docs/core/mongodb/#enabling-mongodb-support).
 
 ## Connection to the MongoDB replica set
 
- - Inside docker: `mongodb://db:db@mongo,mongo-secondary,mongo-arbiter/?replicaSet=dbrs`
+ - Inside docker: `mongodb://db:db@mongo/?replicaSet=dbrs`
  - Outside docker: `mongodb://db:db@localhost:27017`
  - MongoDB Compass: `mongodb://db:db@localhost:27017/?directConnection=true&replicaSet=dbrs`
  - Mongo Express will now be accessible from `http://<project>.ddev.site:9091`
