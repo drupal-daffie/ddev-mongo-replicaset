@@ -22,17 +22,6 @@ var config = {
             "_id": 1,
             "host": "mongo:27017",
             "priority": 2
-        },
-        {
-            "_id": 2,
-            "host": "mongo-secondary:27017",
-            "priority": 1
-        },
-        {
-            "_id": 3,
-            "host": "mongo-arbiter:27017",
-            "priority": 1,
-            "arbiterOnly": true
         }
     ]
 };

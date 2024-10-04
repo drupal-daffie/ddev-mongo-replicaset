@@ -31,9 +31,6 @@ services:
         volume:
           nocopy: true
       - ".:/mnt/ddev_config"
-    depends_on:
-      - mongo-secondary
-      - mongo-arbiter
     restart: always
     entrypoint:
       - bash
@@ -43,62 +40,6 @@ services:
         chown 999:999 /mnt/ddev_config/replica.key
         exec docker-entrypoint.sh $$@
     command: "mongod --bind_ip_all --replSet dbrs --keyFile /mnt/ddev_config/replica.key --port 27017"
-    healthcheck:
-      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' localhost:27017/test --quiet"]
-      interval: 5s
-      timeout: 60s
-
-  # mongodb replicaset secondary member
-  mongo-secondary:
-    container_name: ddev-${DDEV_SITENAME}-mongo-secondary
-    hostname: ddev-${DDEV_SITENAME}-mongo-secondary
-    image: mongo:7-jammy
-    expose:
-      - 27017
-    volumes:
-      - type: "volume"
-        source: mongo-secondary
-        target: "/data/db"
-        volume:
-          nocopy: true
-      - ".:/mnt/ddev_config"
-    restart: always
-    entrypoint:
-      - bash
-      - -c
-      - |
-        chmod 400 /mnt/ddev_config/replica.key
-        chown 999:999 /mnt/ddev_config/replica.key
-        exec docker-entrypoint.sh $$@
-    command: "mongod --bind_ip_all --replSet dbrs --keyFile /mnt/ddev_config/replica.key"
-    healthcheck:
-      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' localhost:27017/test --quiet"]
-      interval: 5s
-      timeout: 60s
-
-  # mongodb replicaset arbiter member
-  mongo-arbiter:
-    container_name: ddev-${DDEV_SITENAME}-mongo-arbiter
-    hostname: ddev-${DDEV_SITENAME}-mongo-arbiter
-    image: mongo:7-jammy
-    expose:
-      - 27017
-    volumes:
-      - type: "volume"
-        source: mongo-arbiter
-        target: "/data/db"
-        volume:
-          nocopy: true
-      - ".:/mnt/ddev_config"
-    restart: always
-    entrypoint:
-      - bash
-      - -c
-      - |
-        chmod 400 /mnt/ddev_config/replica.key
-        chown 999:999 /mnt/ddev_config/replica.key
-        exec docker-entrypoint.sh $$@
-    command: "mongod --bind_ip_all --replSet dbrs --keyFile /mnt/ddev_config/replica.key"
     healthcheck:
       test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' localhost:27017/test --quiet"]
       interval: 5s
@@ -114,8 +55,6 @@ services:
       DDEV_SITENAME: ${DDEV_SITENAME}
     depends_on:
       - mongo
-      - mongo-secondary
-      - mongo-arbiter
     volumes:
       - ".:/mnt/ddev_config"
     restart: no
@@ -137,16 +76,12 @@ services:
       VIRTUAL_HOST: $DDEV_HOSTNAME
       ME_CONFIG_BASICAUTH_USERNAME: db
       ME_CONFIG_BASICAUTH_PASSWORD: db
-      ME_CONFIG_MONGODB_URL: "mongodb://db:db@mongo,mongo-secondary,mongo-arbiter/?replicaSet=dbrs"
+      ME_CONFIG_MONGODB_URL: "mongodb://db:db@mongo/?replicaSet=dbrs"
       HTTP_EXPOSE: "9091:8081"
     depends_on:
       - mongo
-      - mongo-secondary
-      - mongo-arbiter
       - mongo-setup
     entrypoint: [sh, -c, "sleep 5s && tini -- /docker-entrypoint.sh mongo-express"]
 
 volumes:
   mongo:
-  mongo-secondary:
-  mongo-arbiter:
