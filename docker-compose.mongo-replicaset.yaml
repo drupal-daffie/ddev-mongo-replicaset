@@ -11,7 +11,7 @@ services:
   mongo:
     container_name: ddev-${DDEV_SITENAME}-mongo
     hostname: ddev-${DDEV_SITENAME}-mongo
-    image: mongo:7-jammy
+    image: mongo:8
     environment:
       MONGO_INITDB_ROOT_USERNAME: db
       MONGO_INITDB_ROOT_PASSWORD: db
@@ -48,7 +48,7 @@ services:
   mongo-setup:
     container_name: ddev-${DDEV_SITENAME}-mongo-setup
     hostname: ddev-${DDEV_SITENAME}-mongo-setup
-    image: mongo:7-jammy
+    image: mongo:8
     environment:
       MONGO_INITDB_ROOT_USERNAME: db
       MONGO_INITDB_ROOT_PASSWORD: db
